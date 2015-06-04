@@ -16,9 +16,9 @@ local Nameplacer = {}
 -- e.g. local kiExampleVariableMax = 999
 local kcrSelectedText = ApolloColor.new("UI_BtnTextHoloPressedFlyby")
 local kcrNormalText = ApolloColor.new("UI_BtnTextHoloNormal")
-local STR_UNIT_LIST_NAME_BOTTOM = "BottomPosList"
-local STR_UNIT_LIST_NAME_CHEST = "ChestPosList"
-local STR_UNIT_LIST_NAME_CUSTOM = "CustomPosList"
+local STR_UNIT_LIST_NAME_BOTTOM = "GridBottom"
+local STR_UNIT_LIST_NAME_CHEST = "GridChest"
+local STR_UNIT_LIST_NAME_CUSTOM = "GridCustom"
 local STR_NAMEPLACER_MAIN_WND = "NameplacerConfigForm"
 local STR_UNIT_NAME_INPUT = "UnitNameInput"
 
@@ -71,7 +71,7 @@ function Nameplacer:OnDocLoaded()
     self.wndUnitListChest = self.wndMain:FindChild(STR_UNIT_LIST_NAME_CHEST)
     self.wndUnitListBottom = self.wndMain:FindChild(STR_UNIT_LIST_NAME_BOTTOM)
     self.wndUnitListCustom = self.wndMain:FindChild(STR_UNIT_LIST_NAME_CUSTOM)
-    self.tUnitLists = { STR_UNIT_LIST_NAME_CHEST = self.wndUnitListChest, STR_UNIT_LIST_NAME_BOTTOM = self.wndUnitListBottom, STR_UNIT_LIST_NAME_BOTTOM = self.wndUnitListCustom }
+    self.tUnitLists = { GridChest = self.wndUnitListChest, GridBottom = self.wndUnitListBottom, GridCustom = self.wndUnitListCustom }
     self.wndUnitNameInput = self.wndMain:FindChild(STR_UNIT_NAME_INPUT)
     self.wndMain:Show(false, true)
 
@@ -99,7 +99,7 @@ function Nameplacer:OnNameplacerOn()
   self.wndMain:Invoke() -- show the window
 
   -- populate the item list
-  self:PopulateItemList()
+  -- self:PopulateItemList()
 end
 
 
@@ -122,8 +122,14 @@ end
 -----------------------------------------------------------------------------------------------
 -- Only adds a new row to the units list if the unit is not already present
 function Nameplacer:AddUnitRow(strUnitName, strUnitListName)
-  local wndUnitList = self.tUnitLists[strUnitListName]
+  
+  Print("strUnitListName: " .. strUnitListName .. "; strUnitName: " .. strUnitName)
+
+  -- local wndUnitList = self.tUnitLists[strUnitListName]
+  local wndUnitList = self.wndUnitListChest
   local tRowIndex = self:GetUnitRowIndex(strUnitName, wndUnitList)
+  
+  Print ("tRowIndex: " .. tostring(tRowIndex))
 
   if (not tRowIndex) then
     local tRow = wndUnitList:AddRow(strUnitName)
@@ -157,8 +163,8 @@ function Nameplacer:GetUnitRowIndex(strUnitName, strUnitListName)
 
   local trackedUnitCount = wndUnitList:GetRowCount()
   for i = 1, trackedUnitCount do
-    local strUnitName = self.wndTrackedUnits:GetCellText(i, 1)
-    if (strUnitName == strUnitName) then
+    local strCurrUnitName = wndUnitList:GetCellText(i, 1)
+    if (strUnitName == strCurrUnitName) then
       tRowIndex = i
       return tRowIndex
     end
@@ -219,6 +225,24 @@ function Nameplacer:UpdateUnitNameInput(strUnitName)
   self.wndUnitNameInput:SetText(strUnitName)
 end
 
+
+-------------------------------------------------------------------------
+-- On add unit button press
+-------------------------------------------------------------------------
+function Nameplacer:OnAddUnit()
+  local wndUnitNameInput = self.wndUnitNameInput
+  local strUnitName = trim(wndUnitNameInput:GetText())
+  
+  Print("strUnitName: " .. strUnitName)
+  Print("self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_BOTTOM): " .. tostring(self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_BOTTOM)))
+  Print("self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CHEST): " .. tostring(self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CHEST)))
+  Print("self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CUSTOM): " .. tostring(self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CUSTOM)))
+  
+  if (not self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_BOTTOM) and not self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CHEST) and not self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CUSTOM))  then
+    self:AddUnitRow(strUnitName, STR_UNIT_LIST_NAME_CHEST)
+  end
+end
+
 -------------------------------------------------------------------------
 -- On unit list row selection change
 -------------------------------------------------------------------------
@@ -230,6 +254,8 @@ end
 
 function Nameplacer:OnTargetUnitChanged(oTarget)
 
+  if (not oTarget) then return end
+  
   local strUnitName = oTarget:GetName()
   self:UpdateUnitNameInput(strUnitName)
 end
