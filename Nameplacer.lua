@@ -21,6 +21,8 @@ local STR_UNIT_LIST_NAME_CHEST = "GridChest"
 local STR_UNIT_LIST_NAME_CUSTOM = "GridCustom"
 local STR_NAMEPLACER_MAIN_WND = "NameplacerConfigForm"
 local STR_UNIT_NAME_INPUT = "UnitNameInput"
+local STR_UNIT_LIST_SELECTED_BG = "BK3:UI_BK3_Holo_InsetHeader"
+local STR_UNIT_LIST_UNSELECTED_BG = "BK3:UI_BK3_Holo_InsetHeader"
 
 -----------------------------------------------------------------------------------------------
 -- Initialization
@@ -32,7 +34,8 @@ function Nameplacer:new(o)
 
   -- initialize variables here
   o.tItems = {} -- keep track of all the list items
-  o.wndSelectedListItem = nil -- keep track of which list item is currently selected
+  o.strSelectedUnitName = nil -- keep track of which unit is currently selected
+  o.wndSelectedUnitPosList = nil
 
   return o
 end
@@ -71,7 +74,7 @@ function Nameplacer:OnDocLoaded()
     self.wndUnitListChest = self.wndMain:FindChild(STR_UNIT_LIST_NAME_CHEST)
     self.wndUnitListBottom = self.wndMain:FindChild(STR_UNIT_LIST_NAME_BOTTOM)
     self.wndUnitListCustom = self.wndMain:FindChild(STR_UNIT_LIST_NAME_CUSTOM)
-    self.tUnitLists = { GridChest = self.wndUnitListChest, GridBottom = self.wndUnitListBottom, GridCustom = self.wndUnitListCustom }
+    self.tUnitLists = { [STR_UNIT_LIST_NAME_CHEST] = self.wndUnitListChest, [STR_UNIT_LIST_NAME_BOTTOM] = self.wndUnitListBottom, [STR_UNIT_LIST_NAME_CUSTOM] = self.wndUnitListCustom }
     self.wndUnitNameInput = self.wndMain:FindChild(STR_UNIT_NAME_INPUT)
     self.wndMain:Show(false, true)
 
@@ -122,14 +125,14 @@ end
 -----------------------------------------------------------------------------------------------
 -- Only adds a new row to the units list if the unit is not already present
 function Nameplacer:AddUnitRow(strUnitName, strUnitListName)
-  
+
   Print("strUnitListName: " .. strUnitListName .. "; strUnitName: " .. strUnitName)
 
   -- local wndUnitList = self.tUnitLists[strUnitListName]
   local wndUnitList = self.wndUnitListChest
   local tRowIndex = self:GetUnitRowIndex(strUnitName, wndUnitList)
-  
-  Print ("tRowIndex: " .. tostring(tRowIndex))
+
+  Print("tRowIndex: " .. tostring(tRowIndex))
 
   if (not tRowIndex) then
     local tRow = wndUnitList:AddRow(strUnitName)
@@ -232,13 +235,13 @@ end
 function Nameplacer:OnAddUnit()
   local wndUnitNameInput = self.wndUnitNameInput
   local strUnitName = trim(wndUnitNameInput:GetText())
-  
+
   Print("strUnitName: " .. strUnitName)
   Print("self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_BOTTOM): " .. tostring(self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_BOTTOM)))
   Print("self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CHEST): " .. tostring(self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CHEST)))
   Print("self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CUSTOM): " .. tostring(self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CUSTOM)))
-  
-  if (not self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_BOTTOM) and not self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CHEST) and not self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CUSTOM))  then
+
+  if (not self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_BOTTOM) and not self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CHEST) and not self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CUSTOM)) then
     self:AddUnitRow(strUnitName, STR_UNIT_LIST_NAME_CHEST)
   end
 end
@@ -255,9 +258,35 @@ end
 function Nameplacer:OnTargetUnitChanged(oTarget)
 
   if (not oTarget) then return end
-  
+
   local strUnitName = oTarget:GetName()
   self:UpdateUnitNameInput(strUnitName)
+end
+
+---------------------------------------------------------------------------------------------------
+-- NameplacerConfigForm Functions
+---------------------------------------------------------------------------------------------------
+function Nameplacer:OnUnitPosListGainedFocus(wndHandler, wndControl)
+
+  self.wndSelectedUnitPosList = wndHandler
+
+  local wndUnitPosListContainerBackground
+
+  for strUnitPosListName, wndUnitPosList in pairs(self.tUnitLists) do
+    local wndCurrUnitPosList = wndControl:FindChild(strUnitPosListName)
+
+    if wndCurrUnitPosList then
+
+      self.wndSelectedUnitPosList = wndCurrUnitPosList
+      wndUnitPosListContainerBackground = wndControl:FindChild("Background")
+      wndUnitPosListContainerBackground:SetSprite(STR_UNIT_LIST_SELECTED_BG)
+    else
+
+      local wndUnitPosListContainer = wndUnitPosList:GetParent()
+      wndUnitPosListContainerBackground = wndUnitPosListContainer:FindChild("Background")
+      wndUnitPosListContainerBackground:SetSprite(STR_UNIT_LIST_UNSELECTED_BG)
+    end
+  end
 end
 
 -----------------------------------------------------------------------------------------------
