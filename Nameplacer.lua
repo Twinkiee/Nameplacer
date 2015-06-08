@@ -16,13 +16,17 @@ local Nameplacer = {}
 -- e.g. local kiExampleVariableMax = 999
 local kcrSelectedText = ApolloColor.new("UI_BtnTextHoloPressedFlyby")
 local kcrNormalText = ApolloColor.new("UI_BtnTextHoloNormal")
-local STR_UNIT_LIST_NAME_BOTTOM = "GridBottom"
-local STR_UNIT_LIST_NAME_CHEST = "GridChest"
-local STR_UNIT_LIST_NAME_CUSTOM = "GridCustom"
+local STR_UNIT_GRID_NAME_BOTTOM = "GridBottom"
+local STR_UNIT_GRID_NAME_CHEST = "GridChest"
+local STR_UNIT_GRID_NAME_CUSTOM = "GridCustom"
+local STR_UNIT_GRID_NAME = "Grid"
+local STR_UNIT_LIST_NAME_BOTTOM = "BottomListContainer"
+local STR_UNIT_LIST_NAME_CHEST = "ChestListContainer"
+local STR_UNIT_LIST_NAME_CUSTOM = "CustomListContainer"
 local STR_NAMEPLACER_MAIN_WND = "NameplacerConfigForm"
 local STR_UNIT_NAME_INPUT = "UnitNameInput"
 local STR_UNIT_LIST_SELECTED_BG = "BK3:UI_BK3_Holo_InsetHeader"
-local STR_UNIT_LIST_UNSELECTED_BG = "BK3:UI_BK3_Holo_InsetHeader"
+local STR_UNIT_LIST_UNSELECTED_BG = "BK3:UI_BK3_Holo_InsetHeaderThin"
 
 -----------------------------------------------------------------------------------------------
 -- Initialization
@@ -35,6 +39,7 @@ function Nameplacer:new(o)
   -- initialize variables here
   o.tItems = {} -- keep track of all the list items
   o.strSelectedUnitName = nil -- keep track of which unit is currently selected
+  -- Main unit position list container
   o.wndSelectedUnitPosList = nil
 
   return o
@@ -74,7 +79,19 @@ function Nameplacer:OnDocLoaded()
     self.wndUnitListChest = self.wndMain:FindChild(STR_UNIT_LIST_NAME_CHEST)
     self.wndUnitListBottom = self.wndMain:FindChild(STR_UNIT_LIST_NAME_BOTTOM)
     self.wndUnitListCustom = self.wndMain:FindChild(STR_UNIT_LIST_NAME_CUSTOM)
+    self.wndUnitGridChest = self.wndUnitListChest:FindChild(STR_UNIT_GRID_NAME)
+    self.wndUnitGridBottom = self.wndUnitListBottom:FindChild(STR_UNIT_GRID_NAME)
+    self.wndUnitGridCustom = self.wndUnitListCustom:FindChild(STR_UNIT_GRID_NAME)
+    self.wndSelectedUnitPosList = self.wndUnitListChest
+    
+    -- buttons
+    self.wndButtonFromChestToBottom = self.wndMain:FindChild("ButtonFromChestToBottom")
+    self.wndButtonFromBottomToChest = self.wndMain:FindChild("ButtonFromBottomToChest")
+    self.wndButtonFromBottomToCustom = self.wndMain:FindChild("ButtonFromBottomToCustom")
+    self.wndButtonFromCustomToBottom = self.wndMain:FindChild("ButtonFromCustomToBottom")
+
     self.tUnitLists = { [STR_UNIT_LIST_NAME_CHEST] = self.wndUnitListChest, [STR_UNIT_LIST_NAME_BOTTOM] = self.wndUnitListBottom, [STR_UNIT_LIST_NAME_CUSTOM] = self.wndUnitListCustom }
+    self.tUnitGrids = { [STR_UNIT_GRID_NAME_CHEST] = self.wndUnitGridChest, [STR_UNIT_GRID_NAME_BOTTOM] = self.wndUnitGridBottom, [STR_UNIT_GRID_NAME_CUSTOM] = self.wndUnitGridCustom }
     self.wndUnitNameInput = self.wndMain:FindChild(STR_UNIT_NAME_INPUT)
     self.wndMain:Show(false, true)
 
@@ -124,30 +141,28 @@ end
 -- ItemList Functions
 -----------------------------------------------------------------------------------------------
 -- Only adds a new row to the units list if the unit is not already present
-function Nameplacer:AddUnitRow(strUnitName, strUnitListName)
+function Nameplacer:AddUnitRow(strUnitName, wndUnitGrid)
 
-  Print("strUnitListName: " .. strUnitListName .. "; strUnitName: " .. strUnitName)
+  Print("wndUnitGrid: " .. wndUnitGrid:GetName() .. "; strUnitName: " .. strUnitName)
 
-  -- local wndUnitList = self.tUnitLists[strUnitListName]
-  local wndUnitList = self.wndUnitListChest
-  local tRowIndex = self:GetUnitRowIndex(strUnitName, wndUnitList)
+  -- local wndUnitList = self.wndUnitListChest
+  local tRowIndex = self:GetUnitRowIndex(strUnitName, wndUnitGrid)
 
   Print("tRowIndex: " .. tostring(tRowIndex))
 
   if (not tRowIndex) then
-    local tRow = wndUnitList:AddRow(strUnitName)
+    local tRow = wndUnitGrid:AddRow(strUnitName)
   end
 end
 
 ------------------------------------------------------------------------
 -- Deletes a row from the units list if the unit is actually in the list
 ------------------------------------------------------------------------
-function Nameplacer:DeleteUnitRow(strUnitName, strUnitListName)
-  local wndUnitList = self.tUnitLists[strUnitListName]
-  local tRowIndex = self:GetRowIndexOfId(id)
+function Nameplacer:DeleteUnitRow(strUnitName, wndUnitGrid)
+  local nRowIndex = self:GetUnitRowIndex(strUnitName, wndUnitGrid)
 
-  if (tRowIndex) then
-    self.wndTrackedUnits:DeleteRow(tRowIndex)
+  if (nRowIndex) then
+    wndUnitGrid:DeleteRow(nRowIndex)
   end
 end
 
@@ -155,18 +170,19 @@ end
 -- Returns the row index for the given units list.
 -- Returns nil if the unit is not present or the list is nil
 ------------------------------------------------------------------------
-function Nameplacer:GetUnitRowIndex(strUnitName, strUnitListName)
-  local wndUnitList = self.tUnitLists[strUnitListName]
+function Nameplacer:GetUnitRowIndex(strUnitName, wndUnitGrid)
 
-  if (not wndUnitList) then
+  if (not wndUnitGrid) then
     return nil
   end
+  
+  Print ("wndUnitGrid:GetName(): " .. wndUnitGrid:GetName() .. "; strUnitName: " .. strUnitName)
 
   local tRowIndex
 
-  local trackedUnitCount = wndUnitList:GetRowCount()
+  local trackedUnitCount = wndUnitGrid:GetRowCount()
   for i = 1, trackedUnitCount do
-    local strCurrUnitName = wndUnitList:GetCellText(i, 1)
+    local strCurrUnitName = wndUnitGrid:GetCellText(i, 1)
     if (strUnitName == strCurrUnitName) then
       tRowIndex = i
       return tRowIndex
@@ -195,39 +211,60 @@ end
 -------------------------------------------------------------------------
 -- clear the item list
 -------------------------------------------------------------------------
-function Nameplacer:DestroyItemList()
-  -- destroy all the wnd inside the list
-  for idx, wnd in ipairs(self.tItems) do
-    wnd:Destroy()
-  end
-
-  -- clear the list item array
-  self.tItems = {}
-  self.wndSelectedListItem = nil
-end
-
--- add an item into the item list
-function Nameplacer:AddItem(i)
-  -- load the window item for the list item
-  local wnd = Apollo.LoadForm(self.xmlDoc, "ListItem", self.wndItemList, self)
-
-  -- keep track of the window item created
-  self.tItems[i] = wnd
-
-  -- give it a piece of data to refer to
-  local wndItemText = wnd:FindChild("Text")
-  if wndItemText then -- make sure the text wnd exist
-    wndItemText:SetText("item " .. i) -- set the item wnd's text to "item i"
-    wndItemText:SetTextColor(kcrNormalText)
-  end
-  wnd:SetData(i)
-end
-
 function Nameplacer:UpdateUnitNameInput(strUnitName)
   self.strSelectedUnitName = strUnitName
   self.wndUnitNameInput:SetText(strUnitName)
 end
 
+function Nameplacer:ResetGridSelection(wndSelectedUnitPosListContainer)
+  for strUnitPosListName, wndUnitPosListContainer in pairs(self.tUnitLists) do
+
+    if (wndSelectedUnitPosListContainer:GetName() ~= strUnitPosListName) then
+      wndUnitPosListContainer:FindChild(STR_UNIT_GRID_NAME):SetCurrentRow(0)
+    end
+    
+  end
+end
+
+
+function Nameplacer:SelectList(wndSelectedUnitPosListContainer) 
+  self.wndSelectedUnitPosList = wndSelectedUnitPosListContainer
+  
+  Print("self.wndSelectedUnitPosList: " .. self.wndSelectedUnitPosList:GetName())
+
+  local strSelectedUnitPosContainerName = wndSelectedUnitPosListContainer:GetName()
+  local wndUnitPosListContainerBackground = wndSelectedUnitPosListContainer:FindChild("Background")
+  wndUnitPosListContainerBackground:SetSprite(STR_UNIT_LIST_SELECTED_BG)
+
+  for strUnitPosListName, wndUnitPosListContainer in pairs(self.tUnitLists) do
+
+    Print("wndUnitPosListContainer: " .. strSelectedUnitPosContainerName)
+    
+    if wndUnitPosListContainer:GetName() ~= wndSelectedUnitPosListContainer:GetName() then
+        
+      wndUnitPosListContainerBackground = wndUnitPosListContainer:FindChild("Background")
+      wndUnitPosListContainerBackground:SetSprite(STR_UNIT_LIST_UNSELECTED_BG)
+    end
+  end
+
+
+  if (strSelectedUnitPosContainerName == STR_UNIT_LIST_NAME_CHEST) then
+    self.wndButtonFromChestToBottom:Enable(true)
+    self.wndButtonFromBottomToChest:Enable(false)
+    self.wndButtonFromBottomToCustom:Enable(false)
+    self.wndButtonFromCustomToBottom:Enable(false)
+  elseif (strSelectedUnitPosContainerName == STR_UNIT_LIST_NAME_BOTTOM) then
+    self.wndButtonFromChestToBottom:Enable(false)
+    self.wndButtonFromBottomToChest:Enable(true)
+    self.wndButtonFromBottomToCustom:Enable(true)
+    self.wndButtonFromCustomToBottom:Enable(false)
+  elseif (strSelectedUnitPosContainerName == STR_UNIT_LIST_NAME_CUSTOM) then
+    self.wndButtonFromChestToBottom:Enable(false)
+    self.wndButtonFromBottomToChest:Enable(false)
+    self.wndButtonFromBottomToCustom:Enable(false)
+    self.wndButtonFromCustomToBottom:Enable(true)
+  end
+end
 
 -------------------------------------------------------------------------
 -- On add unit button press
@@ -237,12 +274,13 @@ function Nameplacer:OnAddUnit()
   local strUnitName = trim(wndUnitNameInput:GetText())
 
   Print("strUnitName: " .. strUnitName)
-  Print("self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_BOTTOM): " .. tostring(self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_BOTTOM)))
-  Print("self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CHEST): " .. tostring(self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CHEST)))
-  Print("self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CUSTOM): " .. tostring(self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CUSTOM)))
+  Print("self:GetUnitRowIndex(strUnitName, self.wndUnitGridBottom): " .. tostring(self:GetUnitRowIndex(strUnitName, self.wndUnitGridBottom)))
+  Print("self:GetUnitRowIndex(strUnitName, self.wndUnitGridChest): " .. tostring(self:GetUnitRowIndex(strUnitName, self.wndUnitGridChest)))
+  Print("self:GetUnitRowIndex(strUnitName, self.wndUnitGridCustom): " .. tostring(self:GetUnitRowIndex(strUnitName, self.wndUnitGridCustom)))
+  Print("self.wndSelectedUnitPosList: " .. self.wndSelectedUnitPosList:GetName())
 
-  if (not self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_BOTTOM) and not self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CHEST) and not self:GetUnitRowIndex(strUnitName, STR_UNIT_LIST_NAME_CUSTOM)) then
-    self:AddUnitRow(strUnitName, STR_UNIT_LIST_NAME_CHEST)
+  if (not self:GetUnitRowIndex(strUnitName, self.wndUnitGridBottom) and not self:GetUnitRowIndex(strUnitName, self.wndUnitGridChest) and not self:GetUnitRowIndex(strUnitName, self.wndUnitGridCustom)) then
+    self:AddUnitRow(strUnitName, self.wndSelectedUnitPosList:FindChild(STR_UNIT_GRID_NAME))
   end
 end
 
@@ -250,9 +288,32 @@ end
 -- On unit list row selection change
 -------------------------------------------------------------------------
 function Nameplacer:OnUnitListSelChange(wndControl, wndHandler, iRow, iCol)
+
+  Print("wndHandler: " .. wndHandler:GetName() .. "; wndControl: " .. wndControl:GetName() .. "; iRow: " .. tostring(iRow) .. "; iCol: " .. tostring(iCol))
   local strUnitName = wndHandler:GetCellText(iRow, iCol)
 
   self:UpdateUnitNameInput(strUnitName)
+  
+--  for a, wndUnitGrid in ipairs(self.tUnitGrids) do
+--    
+--    Print("Grid: " .. wndUnitGrid:GetParent():GetName())
+--    
+--    if (wndUnitGrid ~= wndHandler) then
+--      Print("Resetting grid selection: " .. wndUnitGrid:GetParent():GetName())
+--      wndHandler:SetCurrentRow(0)
+--    end
+--  end
+
+  local wndSelectedUnitPosListContainer = wndHandler:GetParent()
+  self:SelectList(wndSelectedUnitPosListContainer)
+
+  if (not self.tUnitGrids) then 
+  Print ("not self.tUnitGrids")
+  end
+  Print (table.tostring(self.tUnitGrids))
+  Print (table.tostring(self.tUnitLists))
+
+  self:ResetGridSelection(wndSelectedUnitPosListContainer)
 end
 
 function Nameplacer:OnTargetUnitChanged(oTarget)
@@ -266,26 +327,80 @@ end
 ---------------------------------------------------------------------------------------------------
 -- NameplacerConfigForm Functions
 ---------------------------------------------------------------------------------------------------
-function Nameplacer:OnUnitPosListGainedFocus(wndHandler, wndControl)
 
-  self.wndSelectedUnitPosList = wndHandler
+--function Nameplacer:OnUnitPosListGainedFocus(wndHandler, wndControl)
+--
+--  self.wndSelectedUnitPosList = wndHandler
+--
+--  local wndUnitPosListContainerBackground
+--
+--  for strUnitPosListName, wndUnitPosList in pairs(self.tUnitLists) do
+--    local wndCurrUnitPosList = wndControl:FindChild(strUnitPosListName)
+--
+--    if wndCurrUnitPosList then
+--
+--      self.wndSelectedUnitPosList = wndCurrUnitPosList
+--      wndUnitPosListContainerBackground = wndControl:FindChild("Background")
+--      wndUnitPosListContainerBackground:SetSprite(STR_UNIT_LIST_SELECTED_BG)
+--    else
+--
+--      local wndUnitPosListContainer = wndUnitPosList:GetParent()
+--      wndUnitPosListContainerBackground = wndUnitPosListContainer:FindChild("Background")
+--      wndUnitPosListContainerBackground:SetSprite(STR_UNIT_LIST_UNSELECTED_BG)
+--    end
+--  end
+--end
 
-  local wndUnitPosListContainerBackground
 
-  for strUnitPosListName, wndUnitPosList in pairs(self.tUnitLists) do
-    local wndCurrUnitPosList = wndControl:FindChild(strUnitPosListName)
+function Nameplacer:OnButtonSignalButtonSelectUnitPosList( wndHandler, wndControl, eMouseButton )
 
-    if wndCurrUnitPosList then
+  Print("OnButtonSignalButtonSelectUnitPosList; wndControl: " .. wndControl:GetName())
 
-      self.wndSelectedUnitPosList = wndCurrUnitPosList
-      wndUnitPosListContainerBackground = wndControl:FindChild("Background")
-      wndUnitPosListContainerBackground:SetSprite(STR_UNIT_LIST_SELECTED_BG)
-    else
+  local wndSelectedUnitPosListContainer = wndHandler:GetParent()
+  self:SelectList(wndSelectedUnitPosListContainer)
+end
 
-      local wndUnitPosListContainer = wndUnitPosList:GetParent()
-      wndUnitPosListContainerBackground = wndUnitPosListContainer:FindChild("Background")
-      wndUnitPosListContainerBackground:SetSprite(STR_UNIT_LIST_UNSELECTED_BG)
-    end
+function Nameplacer:OnButtonSignalChangeUnitList( wndHandler, wndControl, eMouseButton )
+  
+  local strButtonName = wndControl:GetName()
+  Print("OnButtSigChangePos; wndControl: " .. wndControl:GetName())
+  
+  if (strButtonName == "ButtonFromChestToBottom") then
+    self:DeleteUnitRow(self.strSelectedUnitName, self.wndUnitGridChest)
+    self:AddUnitRow(self.strSelectedUnitName, self.wndUnitGridBottom)
+    self:SelectList(self.wndUnitListBottom)
+    self:ResetGridSelection(self.wndUnitListBottom)
+    self.wndUnitGridBottom:SetCurrentRow(self:GetUnitRowIndex(self.strSelectedUnitName, self.wndUnitGridBottom))
+   elseif (strButtonName == "ButtonFromBottomToChest") then
+    self:DeleteUnitRow(self.strSelectedUnitName, self.wndUnitGridBottom)
+    self:AddUnitRow(self.strSelectedUnitName, self.wndUnitGridChest)
+    self:SelectList(self.wndUnitListChest)
+    self:ResetGridSelection(self.wndUnitListChest)
+    self.wndUnitGridChest:SetCurrentRow(self:GetUnitRowIndex(self.strSelectedUnitName, self.wndUnitGridChest))
+   elseif (strButtonName == "ButtonFromBottomToCustom") then
+    self:DeleteUnitRow(self.strSelectedUnitName, self.wndUnitGridBottom)
+    self:AddUnitRow(self.strSelectedUnitName, self.wndUnitGridCustom)
+    self:SelectList(self.wndUnitListCustom)
+    self:ResetGridSelection(self.wndUnitListCustom)
+    self.wndUnitGridCustom:SetCurrentRow(self:GetUnitRowIndex(self.strSelectedUnitName, self.wndUnitGridCustom))    
+   elseif (strButtonName == "ButtonFromCustomToBottom") then
+    self:DeleteUnitRow(self.strSelectedUnitName, self.wndUnitGridCustom)
+    self:AddUnitRow(self.strSelectedUnitName, self.wndUnitGridBottom)
+    self:SelectList(self.wndUnitListBottom)
+    self:ResetGridSelection(self.wndUnitListBottom)
+    self.wndUnitGridBottom:SetCurrentRow(self:GetUnitRowIndex(self.strSelectedUnitName, self.wndUnitGridBottom))     
+  end
+end
+
+function Nameplacer:OnGridSelChangeUnitPosList(wndControl, wndHandler, iRow, iCol)
+  -- SEDU - GetCellData returns nil always...bug?
+  local id = tonumber(wndControl:GetCellText(iRow, 1))
+  local retrievedEntity =  self:RetrieveEntityById(id)
+  if(self.tmSelectedEntity ~= retrievedEntity) then
+    self.tmSelectedEntity = retrievedEntity
+    self.tmSelectedEntity:ShowHintArrow()
+  else
+    self.tmSelectedEntity = nil
   end
 end
 
@@ -294,3 +409,40 @@ end
 -----------------------------------------------------------------------------------------------
 local NameplacerInst = Nameplacer:new()
 NameplacerInst:Init()
+
+
+function table.val_to_str ( v )
+  if "string" == type( v ) then
+    v = string.gsub( v, "\n", "\\n" )
+    if string.match( string.gsub(v,"[^'\"]",""), '^"+$' ) then
+      return "'" .. v .. "'"
+    end
+    return '"' .. string.gsub(v,'"', '\\"' ) .. '"'
+  else
+    return "table" == type( v ) and table.tostring( v ) or
+      tostring( v )
+  end
+end
+
+function table.key_to_str ( k )
+  if "string" == type( k ) and string.match( k, "^[_%a][_%a%d]*$" ) then
+    return k
+  else
+    return "[" .. table.val_to_str( k ) .. "]"
+  end
+end
+
+function table.tostring( tbl )
+  local result, done = {}, {}
+  for k, v in ipairs( tbl ) do
+    table.insert( result, table.val_to_str( v ) )
+    done[ k ] = true
+  end
+  for k, v in pairs( tbl ) do
+    if not done[ k ] then
+      table.insert( result,
+        table.key_to_str( k ) .. "=" .. table.val_to_str( v ) )
+    end
+  end
+  return "{" .. table.concat( result, "," ) .. "}"
+end
