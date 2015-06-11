@@ -219,12 +219,28 @@ function Nameplacer:InitUnitList()
   self:ResetGridSelection()
 end
 
+function Nameplacer:InitUnitSelection(strUnitName)
+
+  for strUnitGridName, wndUnitGrid in pairs(self.tUnitGrids) do
+    local nUnitRowIndex = self:GetUnitRowIndex(strText, wndUnitGrid)
+
+    if (nUnitRowIndex) then
+      self.strSelectedUnitName = strUnitName
+      self:SelectUnitGridRow(nUnitRowIndex, wndUnitGrid)
+      return
+    end
+  end
+
+  self:ResetGridSelection()
+end
+
 -------------------------------------------------------------------------
 -- Update the selected unit input box
 -------------------------------------------------------------------------
 function Nameplacer:UpdateUnitNameInput(strUnitName)
-  self.strSelectedUnitName = strUnitName
+
   self.wndUnitNameInput:SetText(strUnitName)
+  self:InitUnitSelection(strUnitName)
 end
 
 -------------------------------------------------------------------------
@@ -315,7 +331,7 @@ end
 function Nameplacer:OnAddUnit()
   local wndUnitNameInput = self.wndUnitNameInput
   local strUnitName = trim(wndUnitNameInput:GetText())
-
+  
   Print("strUnitName: " .. strUnitName)
   Print("self:GetUnitRowIndex(strUnitName, self.wndUnitGridBottom): " .. tostring(self:GetUnitRowIndex(strUnitName, self.wndUnitGridBottom)))
   Print("self:GetUnitRowIndex(strUnitName, self.wndUnitGridChest): " .. tostring(self:GetUnitRowIndex(strUnitName, self.wndUnitGridChest)))
@@ -431,17 +447,7 @@ end
 
 function Nameplacer:OnEditBoxChangedUnitNameInput(wndHandler, wndControl, strText)
 
-  for strUnitGridName, wndUnitGrid in pairs(self.tUnitGrids) do
-    local nUnitRowIndex = self:GetUnitRowIndex(strText, wndUnitGrid)
-
-    if (nUnitRowIndex) then
-      self.strSelectedUnitName = strText
-      self:SelectUnitGridRow(nUnitRowIndex, wndUnitGrid)
-      return
-    end
-  end
-
-  self:ResetGridSelection()
+  self:InitUnitSelection(strText)
 end
 
 -----------------------------------------------------------------------------------------------
