@@ -158,12 +158,15 @@ function Nameplacer:AddUnit(strUnitName, wndUnitGrid)
 
   self:AddUnitRow(strUnitName, wndUnitGrid)
 
+  self.strSelectedUnitName = strUnitName
+  
+  local strUnitGridName = wndUnitGrid:GetName()
   if (wndUnitGrid == STR_UNIT_GRID_NAME_CHEST) then
-    table.insert(self.tUnits, strUnitName, { nAnchorId = CombatFloater.CodeEnumFloaterLocation.Chest })
+    self.tUnits[strUnitName] = { nAnchorId = CombatFloater.CodeEnumFloaterLocation.Chest }
   elseif (wndUnitGrid == STR_UNIT_GRID_NAME_BOTTOM) then
-    table.insert(self.tUnits, strUnitName, { nAnchorId = CombatFloater.CodeEnumFloaterLocation.Bottom })
+    self.tUnits[strUnitName] = { nAnchorId = CombatFloater.CodeEnumFloaterLocation.Bottom }
   else
-    table.insert(self.tUnits, strUnitName, { nOffsetY = 0 })
+    self.tUnits[strUnitName] = { nOffsetY = 0 }
   end
 
   -- end
@@ -182,8 +185,6 @@ function Nameplacer:AddUnitRow(strUnitName, wndUnitGrid)
   Print("tRowIndex: " .. tostring(nNewRowIndex))
 
   self:SelectUnitGridRow(nNewRowIndex, wndUnitGrid)
-
-  table.insert(self.tUnits, strUnitName, { strPosType = strGridName, nValue = 0 })
   -- end
 end
 
@@ -217,11 +218,11 @@ end
 ------------------------------------------------------------------------
 function Nameplacer:FromListToGrid(wndList)
   if (wndList:GetName() == STR_UNIT_LIST_NAME_BOTTOM) then
-    return self.self.wndUnitGridBottom
+    return self.wndUnitGridBottom
   elseif (wndList:GetName() == STR_UNIT_LIST_NAME_CHEST) then
-    return self.self.wndUnitGridChest
+    return self.wndUnitGridChest
   else
-    return self.self.wndUnitGridCustom
+    return self.wndUnitGridCustom
   end
 
 end
@@ -236,7 +237,7 @@ function Nameplacer:GetUnitRowIndex(strUnitName, wndUnitGrid)
     return nil
   end
 
-  Print("wndUnitGrid:GetName(): " .. wndUnitGrid:GetName() .. "; strUnitName: " .. strUnitName)
+  Print("wndUnitGrid:GetName(): " .. wndUnitGrid:GetName() .. "; strUnitName: " .. tostring(strUnitName))
 
   local tRowIndex
 
@@ -385,10 +386,15 @@ function Nameplacer:OnAddUnit()
   Print("self:GetUnitRowIndex(strUnitName, self.wndUnitGridBottom): " .. tostring(self:GetUnitRowIndex(strUnitName, self.wndUnitGridBottom)))
   Print("self:GetUnitRowIndex(strUnitName, self.wndUnitGridChest): " .. tostring(self:GetUnitRowIndex(strUnitName, self.wndUnitGridChest)))
   Print("self:GetUnitRowIndex(strUnitName, self.wndUnitGridCustom): " .. tostring(self:GetUnitRowIndex(strUnitName, self.wndUnitGridCustom)))
+  
+  if (not self.wndSelectedUnitPosList) then
+    self.wndSelectedUnitPosList = self.wndUnitListChest
+  end
+  
   Print("self.wndSelectedUnitPosList: " .. self.wndSelectedUnitPosList:GetName())
-
+  
   if (not self:GetUnitRowIndex(strUnitName, self.wndUnitGridBottom) and not self:GetUnitRowIndex(strUnitName, self.wndUnitGridChest) and not self:GetUnitRowIndex(strUnitName, self.wndUnitGridCustom)) then
-    local nNewRowIndex = self:AddUnitRow(strUnitName, self:FromListToGrid(self.wndSelectedUnitPosList))
+    local nNewRowIndex = self:AddUnit(strUnitName, self:FromListToGrid(self.wndSelectedUnitPosList))
   end
 end
 
