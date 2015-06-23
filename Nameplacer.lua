@@ -70,10 +70,10 @@ function Nameplacer:AddUnit(strUnitName, wndUnitGrid, nVerticalOffset)
   elseif (wndUnitGrid == self.wndUnitGridBottom) then
     tPostion = { nAnchorId = CombatFloater.CodeEnumFloaterLocation.Bottom }
   else
-    tPostion = { nOffsetY = 0 }
+    tPostion = { nAnchorId = CombatFloater.CodeEnumFloaterLocation.Bottom, nVerticalOffset = nVerticalOffset }
   end
   self.tUnits[strUnitName] = tPostion
-  self:UpdateSelectedUnit(strUnitName, tPostion )
+  self:FireEventUnitNameplatePositionChanged(strUnitName, tPostion )
   Print(table.tostring(self.tUnits))
   -- end
 end
@@ -492,10 +492,10 @@ end
 -------------------------------------------------------------------------
 -- Update the selected unit and signal the update
 -------------------------------------------------------------------------
-function Nameplacer:UpdateSelectedUnit(strUnitName, tNameplatePosition)
+function Nameplacer:FireEventUnitNameplatePositionChanged(strUnitName, tNameplatePosition)
   self.strSelectedUnitName = strUnitName
 
-  Print("Nameplacer:UpdateSelectedUnit; firing Nameplacer_UnitNameplatePositionChanged event")
+  Print("Nameplacer:FireEventUnitNameplatePositionChanged; firing Nameplacer_UnitNameplatePositionChanged event")
   Event_FireGenericEvent("Nameplacer_UnitNameplatePositionChanged", strUnitName, tNameplatePosition)
 end
 
