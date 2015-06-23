@@ -13,9 +13,6 @@ local Nameplacer = {}
 -----------------------------------------------------------------------------------------------
 -- Constants
 -----------------------------------------------------------------------------------------------
--- e.g. local kiExampleVariableMax = 999
-local kcrSelectedText = ApolloColor.new("UI_BtnTextHoloPressedFlyby")
-local kcrNormalText = ApolloColor.new("UI_BtnTextHoloNormal")
 local STR_UNIT_GRID_NAME_BOTTOM = "GridBottom"
 local STR_UNIT_GRID_NAME_CHEST = "GridChest"
 local STR_UNIT_GRID_NAME_CUSTOM = "GridCustom"
@@ -25,6 +22,7 @@ local STR_UNIT_LIST_NAME_CHEST = "ChestListContainer"
 local STR_UNIT_LIST_NAME_CUSTOM = "CustomListContainer"
 local STR_NAMEPLACER_MAIN_WND = "NameplacerConfigForm"
 local STR_UNIT_NAME_INPUT = "UnitNameInput"
+local STR_VERTICAL_OFFSET_INPUT = "VerticalOffsetInputBox"
 local STR_UNIT_LIST_SELECTED_BG = "BK3:UI_BK3_Holo_InsetHeader"
 local STR_UNIT_LIST_UNSELECTED_BG = "BK3:UI_BK3_Holo_InsetHeaderThin"
 local STR_BTN_FROM_CHEST_TO_BOTTOM = "ButtonFromChestToBottom"
@@ -99,9 +97,14 @@ function Nameplacer:OnDocLoaded()
     self.wndButtonFromBottomToCustom = self.wndMain:FindChild(STR_BTN_FROM_BOTTOM_TO_CUSTOM)
     self.wndButtonFromCustomToBottom = self.wndMain:FindChild(STR_BTN_FROM_CUSTOM_TO_BOTTOM)
 
+    -- input boxes
+    self.wndUnitNameInput = self.wndMain:FindChild(STR_UNIT_NAME_INPUT)
+    self.wndInputBoxVerticalOffset = self.wndMain:FindChild(STR_VERTICAL_OFFSET_INPUT)
+
+
     self.tUnitLists = { [STR_UNIT_LIST_NAME_CHEST] = self.wndUnitListChest, [STR_UNIT_LIST_NAME_BOTTOM] = self.wndUnitListBottom, [STR_UNIT_LIST_NAME_CUSTOM] = self.wndUnitListCustom }
     self.tUnitGrids = { [STR_UNIT_GRID_NAME_CHEST] = self.wndUnitGridChest, [STR_UNIT_GRID_NAME_BOTTOM] = self.wndUnitGridBottom, [STR_UNIT_GRID_NAME_CUSTOM] = self.wndUnitGridCustom }
-    self.wndUnitNameInput = self.wndMain:FindChild(STR_UNIT_NAME_INPUT)
+
     self.wndMain:Show(false, true)
 
     -- if the xmlDoc is no longer needed, you should set it to nil
@@ -154,33 +157,36 @@ end
 ------------------------------------------------------------------------
 -- Add a new unit to the units list and updates the related grid
 ------------------------------------------------------------------------
-function Nameplacer:AddUnit(strUnitName, wndUnitGrid)
+function Nameplacer:AddUnit(strUnitName, wndUnitGrid, nVerticalOffset)
 
-  self:AddUnitRow(strUnitName, wndUnitGrid)
+  self:AddUnitRow(strUnitName, wndUnitGrid, nVerticalOffset)
 
   self.strSelectedUnitName = strUnitName
   
-  local strUnitGridName = wndUnitGrid:GetName()
-  if (wndUnitGrid == STR_UNIT_GRID_NAME_CHEST) then
+  if (wndUnitGrid == self.wndUnitGridChest) then
     self.tUnits[strUnitName] = { nAnchorId = CombatFloater.CodeEnumFloaterLocation.Chest }
-  elseif (wndUnitGrid == STR_UNIT_GRID_NAME_BOTTOM) then
+  elseif (wndUnitGrid == self.wndUnitGridBottom) then
     self.tUnits[strUnitName] = { nAnchorId = CombatFloater.CodeEnumFloaterLocation.Bottom }
   else
-    self.tUnits[strUnitName] = { nOffsetY = 0 }
+    self.tUnits[strUnitName] = { nVerticalOffset = nVerticalOffset }
   end
 
-  -- end
 end
 
 ------------------------------------------------------------------------
 -- Add a new row to the units grid
 ------------------------------------------------------------------------
-function Nameplacer:AddUnitRow(strUnitName, wndUnitGrid)
+function Nameplacer:AddUnitRow(strUnitName, wndUnitGrid, nVerticalOffset)
 
   local strGridName = wndUnitGrid:GetName()
   Print("wndUnitGrid: " .. wndUnitGrid:GetName() .. "; strUnitName: " .. strUnitName)
 
   local nNewRowIndex = wndUnitGrid:AddRow(strUnitName)
+
+  -- Also initializing the vertical offset velue
+  if (nVerticalOffset) then
+    wndUnitGrid:SetCellText(nNewRowIndex, 2)
+  end
 
   Print("tRowIndex: " .. tostring(nNewRowIndex))
 
@@ -316,6 +322,9 @@ function Nameplacer:ResetGridSelection(wndSelectedGrid)
 
   if (wndSelectedGrid) then
     self:ResetListSelection(wndSelectedGrid:GetParent())
+
+    -- Enabling/disabling vertical offset input box
+    self.wndInputBoxVerticalOffset:SetEnable(wndSelectedGrid == self.wndUnitGridCustom and true or false)
   end
 end
 
@@ -380,9 +389,11 @@ end
 -------------------------------------------------------------------------
 function Nameplacer:OnAddUnit()
   local wndUnitNameInput = self.wndUnitNameInput
+  local wndInputBoxVerticalOffset = self.wndInputBoxVerticalOffset
   local strUnitName = trim(wndUnitNameInput:GetText())
+  local nVerticalOffset = tonumber(trim(wndInputBoxVerticalOffset:GetText()))
   
-  Print("strUnitName: " .. strUnitName)
+  Print("strUnitName: " .. strUnitName .. "; nVerticalOffset: " .. tostring(nVerticalOffset))
   Print("self:GetUnitRowIndex(strUnitName, self.wndUnitGridBottom): " .. tostring(self:GetUnitRowIndex(strUnitName, self.wndUnitGridBottom)))
   Print("self:GetUnitRowIndex(strUnitName, self.wndUnitGridChest): " .. tostring(self:GetUnitRowIndex(strUnitName, self.wndUnitGridChest)))
   Print("self:GetUnitRowIndex(strUnitName, self.wndUnitGridCustom): " .. tostring(self:GetUnitRowIndex(strUnitName, self.wndUnitGridCustom)))
@@ -393,8 +404,8 @@ function Nameplacer:OnAddUnit()
   
   Print("self.wndSelectedUnitPosList: " .. self.wndSelectedUnitPosList:GetName())
   
-  if (not self:GetUnitRowIndex(strUnitName, self.wndUnitGridBottom) and not self:GetUnitRowIndex(strUnitName, self.wndUnitGridChest) and not self:GetUnitRowIndex(strUnitName, self.wndUnitGridCustom)) then
-    local nNewRowIndex = self:AddUnit(strUnitName, self:FromListToGrid(self.wndSelectedUnitPosList))
+  if (not self.tUnits[strUnitName]) then
+    local nNewRowIndex = self:AddUnit(strUnitName, self:FromListToGrid(self.wndSelectedUnitPosList), nVerticalOffset)
   end
 end
 
@@ -406,18 +417,6 @@ function Nameplacer:OnDeleteUnit()
   Print("self.wndSelectedUnitPosList: " .. self.wndSelectedUnitPosList:GetName())
 
   self:DeleteUnit(strUnitName, self:FromListToGrid(self.wndSelectedUnitPosList))
-
-
---  for _, wndUnitGrid in pairs(self.tUnitGrids) do
---    local nUnitRowIndex = self:GetUnitRowIndex(strUnitName, wndUnitGrid)
---
---    Print("wndUnitGrid:" .. wndUnitGrid:GetName() .. "; self:GetUnitRowIndex(strUnitName, wndUnitGrid): " .. tostring(nUnitRowIndex))
---
---    if (nUnitRowIndex) then
---      self:DeleteUnit(strUnitName, wndUnitGrid)
---      return
---    end
---  end
 end
 
 -------------------------------------------------------------------------
