@@ -21,7 +21,7 @@ local STR_UNIT_LIST_NAME_BOTTOM = "BottomListContainer"
 local STR_UNIT_LIST_NAME_CHEST = "ChestListContainer"
 local STR_UNIT_LIST_NAME_CUSTOM = "CustomListContainer"
 local STR_NAMEPLACER_MAIN_WND = "NameplacerConfigForm"
-local STR_UNIT_NAME_INPUT = "UnitNameInput"
+local STR_UNIT_NAME_INPUT = "UnitNameInputBox"
 local STR_VERTICAL_OFFSET_INPUT = "VerticalOffsetInputBox"
 local STR_UNIT_LIST_SELECTED_BG = "BK3:UI_BK3_Holo_InsetHeader"
 local STR_UNIT_LIST_UNSELECTED_BG = "BK3:UI_BK3_Holo_InsetHeaderThin"
@@ -63,7 +63,7 @@ function Nameplacer:AddUnit(strUnitName, wndUnitGrid, nVerticalOffset)
 
   self.strSelectedUnitName = strUnitName
   local tPostion;
-  
+
   -- local strUnitGridName = wndUnitGrid:GetName()
   if (wndUnitGrid == self.wndUnitGridChest) then
     tPostion = { nAnchorId = CombatFloater.CodeEnumFloaterLocation.Chest }
@@ -73,7 +73,7 @@ function Nameplacer:AddUnit(strUnitName, wndUnitGrid, nVerticalOffset)
     tPostion = { nAnchorId = CombatFloater.CodeEnumFloaterLocation.Bottom, nVerticalOffset = nVerticalOffset }
   end
   self.tUnits[strUnitName] = tPostion
-  self:FireEventUnitNameplatePositionChanged(strUnitName, tPostion )
+  self:FireEventUnitNameplatePositionChanged(strUnitName, tPostion)
   Print(table.tostring(self.tUnits))
   -- end
 end
@@ -90,13 +90,12 @@ function Nameplacer:AddUnitRow(strUnitName, wndUnitGrid, nVerticalOffset)
 
   -- Also initializing the vertical offset velue
   if (nVerticalOffset) then
-    wndUnitGrid:SetCellText(nNewRowIndex, 2)
+    wndUnitGrid:SetCellText(nNewRowIndex, 2, tostring(nVerticalOffset))
   end
 
   Print("tRowIndex: " .. tostring(nNewRowIndex))
 
   self:SelectUnitGridRow(nNewRowIndex, wndUnitGrid)
-
 end
 
 ------------------------------------------------------------------------
@@ -178,26 +177,30 @@ end
 
 function Nameplacer:InitUnitSelection(strUnitName, bUpdateGridSelection)
 
+  Print("Nameplacer:InitUnitSelection")
   for _, wndUnitGrid in pairs(self.tUnitGrids) do
     local nUnitRowIndex = self:GetUnitRowIndex(strUnitName, wndUnitGrid)
 
     if (nUnitRowIndex) then
-  self.strSelectedUnitName = strUnitName
+      self.strSelectedUnitName = strUnitName
 
       if (bUpdateGridSelection) then
         self:SelectUnitGridRow(nUnitRowIndex, wndUnitGrid)
-    end
-      return
+      end
 
-    -- Enabling/disabling vertical offset input box
-    self.wndInputBoxVerticalOffset:SetEnable(wndSelectedGrid == self.wndUnitGridCustom and true or false)
+      -- Print()
+      -- Enabling/disabling vertical offset input box
+      -- self.wndInputBoxVerticalOffset:Enable(wndUnitGrid == self.wndUnitGridCustom and true or false)
+      self.wndInputBoxVerticalOffset:Enable(true)
+
+      return
+    end
   end
-end
 
   if (bUpdateGridSelection) then
     self:ResetGridSelection()
-end
   end
+end
 
 
 
@@ -209,18 +212,18 @@ function Nameplacer:OnAddUnit()
   local wndInputBoxVerticalOffset = self.wndInputBoxVerticalOffset
   local strUnitName = trim(wndUnitNameInput:GetText())
   local nVerticalOffset = tonumber(trim(wndInputBoxVerticalOffset:GetText()))
-  
+
   Print("strUnitName: " .. strUnitName .. "; nVerticalOffset: " .. tostring(nVerticalOffset))
   Print("self:GetUnitRowIndex(strUnitName, self.wndUnitGridBottom): " .. tostring(self:GetUnitRowIndex(strUnitName, self.wndUnitGridBottom)))
   Print("self:GetUnitRowIndex(strUnitName, self.wndUnitGridChest): " .. tostring(self:GetUnitRowIndex(strUnitName, self.wndUnitGridChest)))
   Print("self:GetUnitRowIndex(strUnitName, self.wndUnitGridCustom): " .. tostring(self:GetUnitRowIndex(strUnitName, self.wndUnitGridCustom)))
-  
+
   if (not self.wndSelectedUnitPosList) then
     self.wndSelectedUnitPosList = self.wndUnitListChest
   end
-  
+
   Print("self.wndSelectedUnitPosList: " .. self.wndSelectedUnitPosList:GetName())
-  
+
   if (not self.tUnits[strUnitName]) then
     local nNewRowIndex = self:AddUnit(strUnitName, self:FromListToGrid(self.wndSelectedUnitPosList), nVerticalOffset)
   end
@@ -535,7 +538,7 @@ function Nameplacer:ResetListSelection(wndSelectedUnitPosListContainer)
     strSelectedUnitPosContainerName = wndSelectedUnitPosListContainer:GetName()
     wndUnitPosListContainerBackground = wndSelectedUnitPosListContainer:FindChild("Background")
     wndUnitPosListContainerBackground:SetSprite(STR_UNIT_LIST_SELECTED_BG)
-end
+  end
 
   for _, wndUnitPosListContainer in pairs(self.tUnitLists) do
 
