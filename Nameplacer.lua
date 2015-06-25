@@ -479,6 +479,11 @@ function Nameplacer:OnSpinnerChanged(wndHandler, wndControl)
 end
 
 
+function Nameplacer:OnWindowGainedFocusGrid( wndHandler, wndControl )
+
+    Print("Nameplacer:OnWindowGainedFocusGrid; wndHandler: " .. wndHandler:GetName() .. "; wndControl: " .. wndControl:GetName())
+end
+
 ---------------------------------------------------------------------------------------------------
 -- Populate the unit grids
 ---------------------------------------------------------------------------------------------------
