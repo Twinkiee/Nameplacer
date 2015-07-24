@@ -621,12 +621,12 @@ function Nameplacer:SelectUnitGridRow(nRowIndex, wndGrid)
   wndGrid:SelectCell(nRowIndex, 1)
   wndGrid:EnsureCellVisible(nRowIndex, 1)
 
-  if (wndGrid == self.wndUnitGridCustom) then
+  -- if (wndGrid == self.wndUnitGridCustom) then
     -- Enabling/disabling vertical offset input box
-    local bVerticalOffsetInputBoxEnabled = wndUnitGrid == self.wndUnitGridCustom and true or false
+    local bVerticalOffsetInputBoxEnabled = (wndGrid == self.wndUnitGridCustom) and true or false
     self.wndInputBoxVerticalOffset:Enable(bVerticalOffsetInputBoxEnabled)
     self.wndInputBoxVerticalOffset:Show(bVerticalOffsetInputBoxEnabled)
-  end
+  -- end
 end
 
 ---------------------------------------------------------------------------------------------------
