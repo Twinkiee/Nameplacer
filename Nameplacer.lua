@@ -30,7 +30,7 @@ local STR_BTN_FROM_CHEST_TO_BOTTOM = "ButtonFromChestToBottom"
 local STR_BTN_FROM_BOTTOM_TO_CHEST = "ButtonFromBottomToChest"
 local STR_BTN_FROM_BOTTOM_TO_CUSTOM = "ButtonFromBottomToCustom"
 local STR_BTN_FROM_CUSTOM_TO_BOTTOM = "ButtonFromCustomToBottom"
-local N_DEFAULT_VERTICAL_OFFSET = 200
+local N_DEFAULT_VERTICAL_OFFSET = 50
 
 -----------------------------------------------------------------------------------------------
 -- Initialization
@@ -352,7 +352,7 @@ function Nameplacer:OnDocLoaded()
     self.wndContainerVerticalOffset = self.wndMain:FindChild(STR_VERTICAL_OFFSET_CONTAINER)
 
     self.wndInputBoxVerticalOffset:SetMinMax(-500, 500)
-    self.wndInputBoxVerticalOffset:SetValue(200)
+    self.wndInputBoxVerticalOffset:SetValue(N_DEFAULT_VERTICAL_OFFSET)
 
 
     self.tUnitLists = { [STR_UNIT_LIST_NAME_CHEST] = self.wndUnitListChest, [STR_UNIT_LIST_NAME_BOTTOM] = self.wndUnitListBottom, [STR_UNIT_LIST_NAME_CUSTOM] = self.wndUnitListCustom }
@@ -636,16 +636,19 @@ function Nameplacer:ResetListSelection(wndSelectedUnitPosListContainer)
     end
   end
 
-  local bIsRowSelected = self.strSelectedUnitName ~= nil and self.strSelectedUnitName ~= ''
+  -- local bIsRowSelected = self.strSelectedUnitName ~= nil and self.strSelectedUnitName ~= ''
+  local bIsRowSelected = self.tUnits[self.strSelectedUnitName] ~= nil
 
   -- Print("self.strSelectedUnitName: " .. tostring(self.strSelectedUnitName))
 
+  --[[
   if (wndGrid == self.wndUnitGridCustom) then
     -- Enabling/disabling vertical offset input box
     local bVerticalOffsetInputBoxEnabled = wndUnitGrid == self.wndUnitGridCustom and true or false
     self.wndInputBoxVerticalOffset:Enable(bVerticalOffsetInputBoxEnabled)
     self.wndInputBoxVerticalOffset:Show(bVerticalOffsetInputBoxEnabled)
   end
+  ]]
 
   if (strSelectedUnitPosContainerName == STR_UNIT_LIST_NAME_CHEST) then
     self.wndButtonFromChestToBottom:Enable(bIsRowSelected)
