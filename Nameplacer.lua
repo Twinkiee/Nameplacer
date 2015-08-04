@@ -79,9 +79,9 @@ function Nameplacer:AddUnit(strUnitName, wndUnitGrid, nVerticalOffset, bFirsInit
   self.tUnits[strUnitName] = tPostion
 
   self:AddUnitRow(strUnitName, wndUnitGrid, nNewVerticalOffset, bFirsInit)
-  
+
   if (not bFirsInit) then
-  self:FireEventUnitNameplatePositionChanged(strUnitName, tPostion)
+    self:FireEventUnitNameplatePositionChanged(strUnitName, tPostion)
   end
 
   -- Print(table.tostring(self.tUnits))
@@ -105,8 +105,8 @@ function Nameplacer:AddUnitRow(strUnitName, wndUnitGrid, nVerticalOffset, bUpdat
   Print("tRowIndex: " .. tostring(nNewRowIndex))
 
   if (not bUpdateUnitSelection) then
-  self:InitUnitSelection(strUnitName, true)
-end
+    self:InitUnitSelection(strUnitName, true)
+  end
 end
 
 ------------------------------------------------------------------------
@@ -130,8 +130,8 @@ function Nameplacer:DeleteUnit(strUnitName, wndUnitGrid)
     local tCurrentTarget = tPlayer:GetTarget()
     if (tCurrentTarget) then
       strCurrentTargetName = tCurrentTarget:GetName()
+    end
   end
-end
   self:UpdateUnitNameInput(strCurrentTargetName)
 end
 
@@ -225,10 +225,9 @@ function Nameplacer:InitUnitSelection(strUnitName, bUpdateGridSelection)
       wndSelectedGrid = self.wndUnitGridBottom
     end
 
-  --[[else
-    self.strSelectedUnitName = nil
-    ]]
-
+    --[[else
+      self.strSelectedUnitName = nil
+      ]]
   end
 
   -- When a unit is selected we disable the list buttons
@@ -313,7 +312,7 @@ function Nameplacer:OnButtonSignalDeleteUnit()
 
   self:DeleteUnit(strUnitName, self:FromListToGrid(self.wndSelectedUnitPosList))
 
-  self:FireEventUnitNameplatePositionChanged(strUnitName, {nAnchorId = CombatFloater.CodeEnumFloaterLocation.Top, nVerticalOffset = 0})
+  self:FireEventUnitNameplatePositionChanged(strUnitName, { nAnchorId = CombatFloater.CodeEnumFloaterLocation.Top, nVerticalOffset = 0 })
 end
 
 
@@ -366,7 +365,7 @@ function Nameplacer:OnDocLoaded()
     -- Register handlers for events, slash commands and timer, etc.
     -- e.g. Apollo.RegisterEventHandler("KeyDown", "OnKeyDown", self)
     Apollo.RegisterSlashCommand("nameplacer", "OnNameplacerOn", self)
-
+    Apollo.RegisterEventHandler("WindowManagementReady", "OnWindowManagementReady", self)
     Apollo.RegisterEventHandler("TargetUnitChanged", "OnTargetUnitChanged", self)
 
 
@@ -442,7 +441,7 @@ function Nameplacer:OnNameplacerOn()
       local strCurrentTargetName = tCurrentTarget:GetName()
 
       self:UpdateUnitNameInput(strCurrentTargetName, true)
-end
+    end
   end
 end
 
@@ -519,7 +518,7 @@ function Nameplacer:OnSpinnerChanged(wndHandler, wndControl)
     if (not tUnitPosSettings) then
       tUnitPosSettings = { nAnchorId = CombatFloater.CodeEnumFloaterLocation.Bottom, nVerticalOffset = nVerticalOffset }
     else
-    tUnitPosSettings.nVerticalOffset = nVerticalOffset
+      tUnitPosSettings.nVerticalOffset = nVerticalOffset
     end
 
     local nRowIndex = self:GetUnitRowIndex(self.strSelectedUnitName, self.wndUnitGridCustom)
@@ -532,9 +531,13 @@ function Nameplacer:OnSpinnerChanged(wndHandler, wndControl)
 end
 
 
-function Nameplacer:OnWindowGainedFocusGrid( wndHandler, wndControl )
+function Nameplacer:OnWindowGainedFocusGrid(wndHandler, wndControl)
 
-    Print("Nameplacer:OnWindowGainedFocusGrid; wndHandler: " .. wndHandler:GetName() .. "; wndControl: " .. wndControl:GetName())
+  Print("Nameplacer:OnWindowGainedFocusGrid; wndHandler: " .. wndHandler:GetName() .. "; wndControl: " .. wndControl:GetName())
+end
+
+function Nameplacer:OnWindowManagementReady()
+  Event_FireGenericEvent("WindowManagementAdd", { wnd = self.wndMain, strName = "Nameplacer" })
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -595,7 +598,7 @@ function Nameplacer:ResetGridSelection(wndSelectedGrid)
   -- for the next unit addition.
   -- We only change the grid container selection if we're actually selecting a grid row
   -- if (wndSelectedGrid) then
-    self:ResetListSelection(wndSelectedGrid and wndSelectedGrid:GetParent() or nil)
+  self:ResetListSelection(wndSelectedGrid and wndSelectedGrid:GetParent() or nil)
   -- end
 end
 
@@ -693,10 +696,10 @@ function Nameplacer:SelectUnitGridRow(nRowIndex, wndGrid)
   wndGrid:EnsureCellVisible(nRowIndex, 1)
 
   -- if (wndGrid == self.wndUnitGridCustom) then
-    -- Enabling/disabling vertical offset input box
-    -- local bVerticalOffsetInputBoxEnabled = (wndGrid == self.wndUnitGridCustom) and true or false
-    -- self.wndInputBoxVerticalOffset:Enable(bVerticalOffsetInputBoxEnabled)
-    -- self.wndInputBoxVerticalOffset:Show(bVerticalOffsetInputBoxEnabled)
+  -- Enabling/disabling vertical offset input box
+  -- local bVerticalOffsetInputBoxEnabled = (wndGrid == self.wndUnitGridCustom) and true or false
+  -- self.wndInputBoxVerticalOffset:Enable(bVerticalOffsetInputBoxEnabled)
+  -- self.wndInputBoxVerticalOffset:Show(bVerticalOffsetInputBoxEnabled)
   -- end
 end
 
@@ -708,8 +711,8 @@ function Nameplacer:UpdateUnitNameInput(strUnitName, bUpdateList)
   self.wndUnitNameInput:SetText(strUnitName)
 
   if (strUnitName ~= "") then
-  self:InitUnitSelection(strUnitName, bUpdateList)
-end
+    self:InitUnitSelection(strUnitName, bUpdateList)
+  end
 end
 
 function Nameplacer:UpdateVerticalOffsetCell(nRowIndex, nVerticalOffset)
