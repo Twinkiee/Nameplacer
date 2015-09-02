@@ -57,6 +57,54 @@ end
 -----------------------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
+-- Add a targeted unit to the units list and updates the related grid
+------------------------------------------------------------------------
+function Nameplacer:AddTargetedUnitBottom()
+
+  local unitTarget = GameLib.GetPlayerUnit():GetTarget()
+  if (not unitTarget) then return end
+
+  self:PopulateUnitGrids()
+
+  local strUnitName = unitTarget:GetName()
+  self:RemoveUnitFromGrid(unitTarget)
+
+  self:AddUnit(strUnitName, self.wndUnitGridBottom)
+end
+
+------------------------------------------------------------------------
+-- Add a targeted unit to the units list and updates the related grid
+------------------------------------------------------------------------
+function Nameplacer:AddTargetedUnitChest()
+
+  local unitTarget = GameLib.GetPlayerUnit():GetTarget()
+  if (not unitTarget) then return end
+
+  self:PopulateUnitGrids()
+
+  local strUnitName = unitTarget:GetName()
+  self:RemoveUnitFromGrid(unitTarget)
+
+  self:AddUnit(strUnitName, self.wndUnitGridChest)
+end
+
+------------------------------------------------------------------------
+-- Add a targeted unit to the units list and updates the related grid
+------------------------------------------------------------------------
+function Nameplacer:AddTargetedUnitCustom(nVerticalOffset)
+
+  local unitTarget = GameLib.GetPlayerUnit():GetTarget()
+  if (not unitTarget) then return end
+
+  self:PopulateUnitGrids()
+
+  local strUnitName = unitTarget:GetName()
+  self:RemoveUnitFromGrid(unitTarget)
+
+  self:AddUnit(strUnitName, self.wndUnitGridCustom, nVerticalOffset)
+end
+
+------------------------------------------------------------------------
 -- Add a new unit to the units list and updates the related grid
 ------------------------------------------------------------------------
 function Nameplacer:AddUnit(strUnitName, wndUnitGrid, nVerticalOffset, bFirsInit)
@@ -132,7 +180,10 @@ function Nameplacer:DeleteUnit(strUnitName, wndUnitGrid)
       strCurrentTargetName = tCurrentTarget:GetName()
     end
   end
-  self:UpdateUnitNameInput(strCurrentTargetName)
+
+  if (strCurrentTargetName and strCurrentTargetName ~= "") then
+    self:UpdateUnitNameInput(strCurrentTargetName)
+  end
 end
 
 ------------------------------------------------------------------------
@@ -436,9 +487,9 @@ function Nameplacer:OnNameplacerOn()
 
   local tPlayer = GameLib.GetPlayerUnit()
   if (tPlayer) then
-    local tCurrentTarget = tPlayer:GetTarget()
-    if (tCurrentTarget) then
-      local strCurrentTargetName = tCurrentTarget:GetName()
+    local unitCurrentTarget = tPlayer:GetTarget()
+    if (unitCurrentTarget) then
+      local strCurrentTargetName = unitCurrentTarget:GetName()
 
       self:UpdateUnitNameInput(strCurrentTargetName, true)
     end
@@ -580,6 +631,29 @@ function Nameplacer:FireEventUnitNameplatePositionChanged(strUnitName, tNameplat
   Event_FireGenericEvent("Nameplacer_UnitNameplatePositionChanged", strUnitName, tNameplatePosition)
 end
 
+function Nameplacer:RemoveUnitFromGrid(unitToRemove)
+  local strUnitName = unitToRemove:GetName()
+  local tPosSettings = self.tUnits[strUnitName]
+  local wndCurrentGrid
+
+  if (tPosSettings) then
+    if (tPosSettings.nVerticalOffset) then
+      wndCurrentGrid = self.wndUnitGridCustom
+
+      -- Set the spinner box value
+      self.wndInputBoxVerticalOffset:SetValue(tPosSettings.nVerticalOffset)
+    elseif (tPosSettings.nAnchorId == CombatFloater.CodeEnumFloaterLocation.Chest) then
+      wndCurrentGrid = self.wndUnitGridChest
+    else
+      wndCurrentGrid = self.wndUnitGridBottom
+    end
+
+    if (wndCurrentGrid) then
+      self:DeleteUnitRow(strUnitName, wndCurrentGrid)
+    end
+  end
+end
+
 
 -------------------------------------------------------------------------
 -- Unselect any grid selection other than the selected one
@@ -707,6 +781,8 @@ end
 -- Update the selected unit input box
 ---------------------------------------------------------------------------------------------------
 function Nameplacer:UpdateUnitNameInput(strUnitName, bUpdateList)
+
+  if (not strUnitName) then return end
 
   self.wndUnitNameInput:SetText(strUnitName)
 
