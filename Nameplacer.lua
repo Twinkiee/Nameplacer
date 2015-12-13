@@ -141,16 +141,12 @@ end
 function Nameplacer:AddUnitRow(strUnitName, wndUnitGrid, nVerticalOffset, bUpdateUnitSelection)
 
   local strGridName = wndUnitGrid:GetName()
-  Print("wndUnitGrid: " .. strGridName .. "; strUnitName: " .. strUnitName)
-
   local nNewRowIndex = wndUnitGrid:AddRow(strUnitName)
 
   -- Also initializing the vertical offset value
   if (nVerticalOffset) then
     self:UpdateVerticalOffsetCell(nNewRowIndex, nVerticalOffset)
   end
-
-  Print("tRowIndex: " .. tostring(nNewRowIndex))
 
   if (not bUpdateUnitSelection) then
     self:InitUnitSelection(strUnitName, true)
@@ -223,8 +219,6 @@ function Nameplacer:GetUnitRowIndex(strUnitName, wndUnitGrid)
     return nil
   end
 
-  Print("wndUnitGrid:GetName(): " .. wndUnitGrid:GetName() .. "; strUnitName: " .. tostring(strUnitName))
-
   local tRowIndex
 
   for i = 1, wndUnitGrid:GetRowCount() do
@@ -256,8 +250,6 @@ end
 -- Update the UI elements as well
 -------------------------------------------------------------------------
 function Nameplacer:InitUnitSelection(strUnitName, bUpdateGridSelection)
-
-  Print("Nameplacer:InitUnitSelection; strUnitName: " .. tostring(strUnitName))
 
   local tPosSettings = self.tUnits[strUnitName]
   local wndSelectedGrid
@@ -308,13 +300,9 @@ function Nameplacer:OnAddUnit()
   local strUnitName = trim(wndUnitNameInput:GetText())
   local nVerticalOffset = wndInputBoxVerticalOffset:GetValue()
 
-  Print("strUnitName: " .. strUnitName .. "; nVerticalOffset: " .. tostring(nVerticalOffset))
-
   if (not self.wndSelectedUnitPosList) then
     self.wndSelectedUnitPosList = self.wndUnitListChest
   end
-
-  Print("self.wndSelectedUnitPosList: " .. self.wndSelectedUnitPosList:GetName())
 
   if (not self.tUnits[strUnitName]) then
     local nNewRowIndex = self:AddUnit(strUnitName, self:FromListToGrid(self.wndSelectedUnitPosList), nVerticalOffset)
@@ -323,8 +311,6 @@ end
 
 function Nameplacer:OnButtonSignalButtonSelectUnitPosList(wndHandler, wndControl, eMouseButton)
 
-  Print("OnButtonSignalButtonSelectUnitPosList; wndControl: " .. wndControl:GetName())
-
   local wndSelectedUnitPosListContainer = wndHandler:GetParent()
   self:ResetListSelection(wndSelectedUnitPosListContainer)
 end
@@ -332,7 +318,6 @@ end
 function Nameplacer:OnButtonSignalChangeUnitList(wndHandler, wndControl, eMouseButton)
 
   local strButtonName = wndControl:GetName()
-  Print("OnButtSigChangePos; wndControl: " .. wndControl:GetName())
 
   if (strButtonName == STR_BTN_FROM_CHEST_TO_BOTTOM) then
     self:DeleteUnitRow(self.strSelectedUnitName, self.wndUnitGridChest)
@@ -357,9 +342,6 @@ end
 function Nameplacer:OnButtonSignalDeleteUnit()
   local wndUnitNameInput = self.wndUnitNameInput
   local strUnitName = trim(wndUnitNameInput:GetText())
-
-  Print("strUnitName: " .. strUnitName)
-  Print("self.wndSelectedUnitPosList: " .. self.wndSelectedUnitPosList:GetName())
 
   self:DeleteUnit(strUnitName, self:FromListToGrid(self.wndSelectedUnitPosList))
 
@@ -458,19 +440,16 @@ end
 -------------------------------------------------------------------------
 function Nameplacer:OnGridSelChangeUnit(wndControl, wndHandler, iRow, iCol)
 
-  Print("wndHandler: " .. wndHandler:GetName() .. "; wndControl: " .. wndControl:GetName() .. "; iRow: " .. tostring(iRow) .. "; iCol: " .. tostring(iCol))
   local strUnitName = wndHandler:GetCellText(iRow, 1)
   local nVerticalOffset = wndHandler:GetCellText(iRow, 2)
 
   self:UpdateUnitNameInput(strUnitName, true)
 
+--[[
   if (not self.tUnitGrids) then
     Print("not self.tUnitGrids")
   end
-  -- Print(table.tostring(self.tUnitGrids))
-  -- wndControl:SetCurrentRow(iRow)
-
-  -- self:ResetGridSelection(wndHandler)
+  ]]
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -508,33 +487,8 @@ end
 -- NameplacerConfigForm Functions
 ---------------------------------------------------------------------------------------------------
 
---function Nameplacer:OnUnitPosListGainedFocus(wndHandler, wndControl)
---
---  self.wndSelectedUnitPosList = wndHandler
---
---  local wndUnitPosListContainerBackground
---
---  for strUnitPosListName, wndUnitPosList in pairs(self.tUnitLists) do
---    local wndCurrUnitPosList = wndControl:FindChild(strUnitPosListName)
---
---    if wndCurrUnitPosList then
---
---      self.wndSelectedUnitPosList = wndCurrUnitPosList
---      wndUnitPosListContainerBackground = wndControl:FindChild("Background")
---      wndUnitPosListContainerBackground:SetSprite(STR_UNIT_LIST_SELECTED_BG)
---    else
---
---      local wndUnitPosListContainer = wndUnitPosList:GetParent()
---      wndUnitPosListContainerBackground = wndUnitPosListContainer:FindChild("Background")
---      wndUnitPosListContainerBackground:SetSprite(STR_UNIT_LIST_UNSELECTED_BG)
---    end
---  end
---end
-
 
 function Nameplacer:OnRestore(saveLevel, savedData)
-
-  Print(table.tostring(savedData.tUnits))
 
   if (savedData.tUnits) then
     self.tUnits = savedData.tUnits
@@ -555,14 +509,11 @@ end
 
 function Nameplacer:OnSpinnerChanged(wndHandler, wndControl)
 
-  -- Print("Nameplacer:OnSpinnerChanged; wndHandler:GetName(): " .. wndHandler:GetName() .. "; wndControl:GetName(): " .. wndControl:GetName())
   local nVerticalOffset = wndHandler:GetValue()
 
   -- If we're changing the vertical offset of an already stored unit we retrive its value from the table
   -- otherwise we create a new one with a fake initial vertical offset
   local tUnitPosSettings = self.tUnits[self.strSelectedUnitName]
-
-  -- Print("Nameplacer:OnSpinnerChanged; tUnitPosSettings: " .. table.tostring(tUnitPosSettings) .. "; nVerticalOffset: " .. tostring(nVerticalOffset))
 
   -- If the vertical offset has been changed
   if (not tUnitPosSettings or nVerticalOffset ~= tUnitPosSettings.nVerticalOffset) then
@@ -575,8 +526,6 @@ function Nameplacer:OnSpinnerChanged(wndHandler, wndControl)
     local nRowIndex = self:GetUnitRowIndex(self.strSelectedUnitName, self.wndUnitGridCustom)
     self:UpdateVerticalOffsetCell(nRowIndex, nVerticalOffset)
 
-    Print("Nameplacer:OnSpinnerChanged; self.strSelectedUnitName: " .. tostring(self.strSelectedUnitName) .. "; tUnitPosSettings: " .. table.tostring(tUnitPosSettings))
-
     self:FireEventUnitNameplatePositionChanged(self.strSelectedUnitName, tUnitPosSettings)
   end
 end
@@ -584,7 +533,7 @@ end
 
 function Nameplacer:OnWindowGainedFocusGrid(wndHandler, wndControl)
 
-  Print("Nameplacer:OnWindowGainedFocusGrid; wndHandler: " .. wndHandler:GetName() .. "; wndControl: " .. wndControl:GetName())
+--  Print("Nameplacer:OnWindowGainedFocusGrid; wndHandler: " .. wndHandler:GetName() .. "; wndControl: " .. wndControl:GetName())
 end
 
 function Nameplacer:OnWindowManagementReady()
@@ -595,8 +544,6 @@ end
 -- Populate the unit grids
 ---------------------------------------------------------------------------------------------------
 function Nameplacer:PopulateUnitGrids()
-
-  Print(table.tostring(self.tUnits))
 
   if (self.tUnits and (not self.wndUnitGridChest or self.wndUnitGridChest:GetRowCount() <= 0)
       and (not self.wndUnitGridBottom or self.wndUnitGridBottom:GetRowCount() <= 0)
@@ -620,14 +567,11 @@ end
 -- Update the selected unit and signal the update
 -------------------------------------------------------------------------
 function Nameplacer:FireEventUnitNameplatePositionChanged(strUnitName, tNameplatePosition)
-  -- self.strSelectedUnitName = strUnitName
-  Print("Nameplacer:FireEventUnitNameplatePositionChanged; firing Nameplacer_UnitNameplatePositionChanged event; strUnitName: " .. tostring(strUnitName))
 
   if (not tNameplatePosition) then
     return
   end
 
-  Print("Nameplacer:FireEventUnitNameplatePositionChanged; firing Nameplacer_UnitNameplatePositionChanged event; strUnitName: " .. tostring(strUnitName) .. "; tNameplatePosition: " .. table.tostring(tNameplatePosition))
   Event_FireGenericEvent("Nameplacer_UnitNameplatePositionChanged", strUnitName, tNameplatePosition)
 end
 
@@ -663,7 +607,6 @@ function Nameplacer:ResetGridSelection(wndSelectedGrid)
   for _, wndGrid in pairs(self.tUnitGrids) do
 
     if (wndSelectedGrid ~= wndGrid) then
-      -- Print("ResetGridSelection: " .. wndGrid:GetParent():GetName())
       wndGrid:SetCurrentRow(0)
     end
   end
@@ -678,12 +621,6 @@ end
 
 
 function Nameplacer:ResetListSelection(wndSelectedUnitPosListContainer)
-
-  -- Print("Nameplacer:ResetListSelection; wndSelectedUnitPosListContainer: " .. tostring(wndSelectedUnitPosListContainer))
-
-  -- if (self.wndSelectedUnitPosList == wndSelectedUnitPosListContainer) then
-  --   return
-  -- end
 
   -- First initialization
   if (not wndSelectedUnitPosListContainer and self.wndSelectedUnitPosList) then
@@ -715,17 +652,6 @@ function Nameplacer:ResetListSelection(wndSelectedUnitPosListContainer)
 
   -- local bIsRowSelected = self.strSelectedUnitName ~= nil and self.strSelectedUnitName ~= ''
   local bIsRowSelected = self.tUnits[self.strSelectedUnitName] ~= nil
-
-  -- Print("self.strSelectedUnitName: " .. tostring(self.strSelectedUnitName))
-
-  --[[
-  if (wndGrid == self.wndUnitGridCustom) then
-    -- Enabling/disabling vertical offset input box
-    local bVerticalOffsetInputBoxEnabled = wndUnitGrid == self.wndUnitGridCustom and true or false
-    self.wndInputBoxVerticalOffset:Enable(bVerticalOffsetInputBoxEnabled)
-    self.wndInputBoxVerticalOffset:Show(bVerticalOffsetInputBoxEnabled)
-  end
-  ]]
 
   if (strSelectedUnitPosContainerName == STR_UNIT_LIST_NAME_CHEST) then
     self.wndButtonFromChestToBottom:Enable(bIsRowSelected)
@@ -764,17 +690,8 @@ end
 -----------------------------------------------------------------------------------------------
 function Nameplacer:SelectUnitGridRow(nRowIndex, wndGrid)
 
-  -- Print("nRowIndex: " .. tostring(nRowIndex))
-  -- Print("wndGrid: " .. wndGrid:GetParent():GetName())
   wndGrid:SelectCell(nRowIndex, 1)
   wndGrid:EnsureCellVisible(nRowIndex, 1)
-
-  -- if (wndGrid == self.wndUnitGridCustom) then
-  -- Enabling/disabling vertical offset input box
-  -- local bVerticalOffsetInputBoxEnabled = (wndGrid == self.wndUnitGridCustom) and true or false
-  -- self.wndInputBoxVerticalOffset:Enable(bVerticalOffsetInputBoxEnabled)
-  -- self.wndInputBoxVerticalOffset:Show(bVerticalOffsetInputBoxEnabled)
-  -- end
 end
 
 ---------------------------------------------------------------------------------------------------
